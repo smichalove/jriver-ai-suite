@@ -1,0 +1,35 @@
+# Local environment credentials & keys
+.env
+auth/
+
+# Databases, backups, and dumps
+*.db
+*.db-shm
+*.db-wal
+*.bak
+*.sql
+pg_data/
+
+# Local runtime logs
+*.log
+uvicorn_stdout.log
+gemma_cataloger.log
+
+# Developer session tracking & guidelines (internal dev only)
+progress.md
+walkthrough.md
+planning.md
+agents.md
+AGENTS.md
+
+# Python byte-code
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE & OS-specific files
+.vscode/
+.idea/
+Thumbs.db
+ehthumbs.db
+Desktop.ini

@@ -1,0 +1,32 @@
+Analyze the files and directory path to determine if this folder contains a musical release (e.g., music album, singles, EP, music concert video, musical soundtrack) or if it is non-musical (e.g., home videos, TV shows, movies, software, gameplay clips, audiobooks).
+If it is a musical release, identify the correct artist name, album name, musical genre, and clean the track titles.
+If the artist prefixes the track titles (e.g. 'Artist - Song Title'), strip it out of the title.
+If you are unsure of the exact genre, do NOT return 'Unknown Genre', 'Unknown', or 'Unresolved Genre'. Instead, analyze the artist name, album title, track names, and visual tags to make a best-effort guess (e.g. use 'Holiday' or 'Christmas' for Christmas releases, 'Acoustic' or 'Singer-Songwriter' for acoustic tracks, or standard genres like 'Pop', 'Rock', 'Jazz', 'Folk', 'Electronic'). Always return a valid, recognizable genre.
+
+Parent Directory Path: {dir_path}
+JRiver Album Name: {album_name}
+JRiver Genre Name: {genre_name}
+Cover Art Visual Description: {visual_desc}
+Cover Art Suggested Tags: {visual_tags}
+
+Complete Track List in this Directory:
+{track_list}
+
+Respond strictly with a JSON block in this exact structure, with no markdown code blocks or extra text:
+{
+  "is_mixed_or_various": true,
+  "default_artist": "The common artist name (e.g., 'Jimi Hendrix')",
+  "default_album": "The common album name (e.g., 'Electric Ladyland')",
+  "default_genre": "The common musical genre (e.g., 'Rock', 'Jazz', 'Holiday', 'Folk')",
+  "tracks": [
+    {
+      "file": "filename1.ext",
+      "is_music": true,
+      "title": "Cleaned Track Title 1",
+      "artist": "Artist name (MUST always be populated for music tracks)",
+      "album": "Album name (MUST always be populated for music tracks)",
+      "genre": "Genre name (MUST always be populated for music tracks)"
+    }
+  ]
+}
+If a file is non-musical (e.g., video clips, software, home videos), set "is_music" to false, and you can leave artist, album, and genre empty for that track.
