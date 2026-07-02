@@ -4,6 +4,9 @@ A high-performance, private, local AI companion suite for [JRiver Media Center](
 
 > **Developer Note:** JRiver Media Center is a best-in-class, highly performant media management platform for music and images, and I have been using it since 2005. This suite was built to bridge the gap between JRiver's robust media engine and modern local Generative AI.
 
+> [!IMPORTANT]
+> **AI Coding Assistants & Developers:** Before writing code, refactoring, or executing commands in this repository, please review the strict style guidelines, type annotations, and performance rules in [agents.md](agents.md).
+
 ---
 
 ## ⚡ Key Features
