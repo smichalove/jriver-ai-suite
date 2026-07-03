@@ -1,7 +1,10 @@
 Analyze the files and directory path to determine if this folder contains a musical release (e.g., music album, singles, EP, music concert video, musical soundtrack) or if it is non-musical (e.g., home videos, TV shows, movies, software, gameplay clips, audiobooks).
 If it is a musical release, identify the correct artist name, album name, musical genre, and clean the track titles.
 If the artist prefixes the track titles (e.g. 'Artist - Song Title'), strip it out of the title.
-If you are unsure of the exact genre, do NOT return 'Unknown Genre', 'Unknown', or 'Unresolved Genre'. Instead, analyze the artist name, album title, track names, and visual tags to make a best-effort guess (e.g. use 'Holiday' or 'Christmas' for Christmas releases, 'Acoustic' or 'Singer-Songwriter' for acoustic tracks, or standard genres like 'Pop', 'Rock', 'Jazz', 'Folk', 'Electronic'). Always return a valid, recognizable genre.
+If you are unsure of the exact genre, do NOT return 'Unknown Genre', 'Unknown', or 'Unresolved Genre'. Instead, analyze the artist name, album title, track names, and visual tags to make a best-effort guess. Prefer specific, recognizable music genres and sub-genres (e.g., 'Folk Rock', 'Classic Rock', 'Progressive Rock', 'Jazz Fusion', 'Vocal Jazz', 'Smooth Jazz', 'Blues Rock', 'Singer-Songwriter', 'Synth-Pop', 'Ambient Electronic', 'Classical Crossover', 'Holiday', 'Acoustic', or standard classes like 'Pop', 'Rock', 'Jazz', 'Folk', 'Blues', 'Electronic' if no sub-genre applies). This can include examples like 'Jazz, Fusion', 'Rock, Folk', 'Jazz, Vocals', 'Classical, Choral', or 'Blues, Rock'. Always return a valid, recognizable genre.
+NOTE: "Steven Michalove" is a valid independent artist name. If the directory path, album name, or track filenames reference "steven", "michalove", or "smichalove", use "Steven Michalove" as the artist name and do NOT mark the track as unresolved.
+NOTE: Well-known audiophile test and demo discs (e.g., Stereophile Test CD, Marantz Hi-End SACD, High-End Audiophile Test Demo, SACD Sampler, Demo CD, Test & Demo) are valid music releases. Use "Various Artists" as the artist, the disc title as the album name, and "Audiophile / Demo" as the genre for these releases.
+
 
 Parent Directory Path: {dir_path}
 JRiver Album Name: {album_name}
@@ -17,7 +20,7 @@ Respond strictly with a JSON block in this exact structure, with no markdown cod
   "is_mixed_or_various": true,
   "default_artist": "The common artist name (e.g., 'Jimi Hendrix')",
   "default_album": "The common album name (e.g., 'Electric Ladyland')",
-  "default_genre": "The common musical genre (e.g., 'Rock', 'Jazz', 'Holiday', 'Folk')",
+  "default_genre": "The common musical genre (e.g., 'Folk Rock', 'Jazz Fusion', 'Blues Rock', 'Rock', 'Jazz')",
   "tracks": [
     {
       "file": "filename1.ext",

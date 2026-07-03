@@ -23,6 +23,7 @@ import json
 import logging
 import argparse
 import subprocess
+import signal
 import psycopg2
 from dotenv import load_dotenv
 from typing import List, Dict, Any, Tuple, Optional, Set, Union
@@ -336,6 +337,10 @@ def run_llm_curation(conn: Any, chunk_dirs: Optional[List[str]] = None, dry_run:
         thread_cursor = thread_conn.cursor()
         
         while True:
+            # Stop pulling new jobs if a shutdown/interrupt has been signalled.
+            # The current in-flight HTTP request (if any) will finish naturally.
+            if shutdown_event.is_set():
+                break
             try:
                 job = job_queue.get_nowait()
             except queue.Empty:
@@ -461,17 +466,92 @@ def run_llm_curation(conn: Any, chunk_dirs: Optional[List[str]] = None, dry_run:
                 
         thread_conn.close()
 
-    # Spawn curation worker threads for each active server
+    # ---------------------------------------------------------------------------
+    # Shutdown coordination: a threading.Event lets Ctrl+C signal all workers
+    # to stop pulling new jobs after finishing their current in-flight request.
+    # We cannot interrupt a blocking HTTP call mid-flight, but we can prevent
+    # workers from pulling the next job, giving a clean drain-and-exit.
+    # ---------------------------------------------------------------------------
+    shutdown_event = threading.Event()
+
+    original_sigint = signal.getsignal(signal.SIGINT)
+
+    def _sigint_handler(sig: int, frame: Any) -> None:
+        """Handles Ctrl+C by draining the job queue and signalling workers to stop."""
+        if not shutdown_event.is_set():
+            logger.warning(
+                "\n[INTERRUPT] Ctrl+C received — draining job queue. "
+                "Workers will stop after their current in-flight request completes..."
+            )
+            shutdown_event.set()
+            # Drain the queue so workers' get_nowait() sees Empty and exits loop
+            while not job_queue.empty():
+                try:
+                    job_queue.get_nowait()
+                    job_queue.task_done()
+                except queue.Empty:
+                    break
+
+    signal.signal(signal.SIGINT, _sigint_handler)
+
+    # ---------------------------------------------------------------------------
+    # Concurrency multiplier per server:
+    # Fast Ollama servers get 2 worker threads each so the queue drains faster.
+    # Slow VLM servers keep 1 thread to avoid overwhelming their single GPU pipeline.
+    # ---------------------------------------------------------------------------
+    FAST_OLLAMA_CONCURRENCY: int = 2  # threads per fast Ollama node
+    VLM_CONCURRENCY: int = 1          # threads per VLM server
+
+    def _concurrency_for(srv: Any) -> int:
+        """Returns the number of concurrent worker threads for a given server."""
+        if srv.mode == "ollama":
+            return FAST_OLLAMA_CONCURRENCY
+        return VLM_CONCURRENCY
+
+    # Spawn worker threads — multiple per fast server, one per slow VLM server
     worker_threads = []
     for srv in active_servers:
-        t = threading.Thread(target=curation_worker, args=(srv,), name=f"CurationWorker-{srv.name}")
-        t.daemon = True
-        t.start()
-        worker_threads.append(t)
-        
-    # Wait for the worker queue to be fully completed
-    while not job_queue.empty() or any(t.is_alive() for t in worker_threads):
-        time.sleep(0.1)
+        concurrency = _concurrency_for(srv)
+        for worker_idx in range(concurrency):
+            t = threading.Thread(
+                target=curation_worker,
+                args=(srv,),
+                name=f"CurationWorker-{srv.name}-{worker_idx + 1}"
+            )
+            t.daemon = True
+            t.start()
+            worker_threads.append(t)
+            logger.info(
+                f"[THREAD SPAWN] Started worker {worker_idx + 1}/{concurrency} "
+                f"for server '{srv.name}'"
+            )
+
+    logger.info(
+        f"[THREAD POOL] {len(worker_threads)} total worker threads active across "
+        f"{len(active_servers)} servers."
+    )
+
+    # ---------------------------------------------------------------------------
+    # Non-blocking wait loop: keeps the main thread alive and responsive to
+    # SIGINT signals. Exits when all workers finish or shutdown is triggered.
+    # Per post-mortem (2026-06-27): never use blocking join() on Windows —
+    # it prevents Python from delivering Ctrl+C to the main thread.
+    # ---------------------------------------------------------------------------
+    try:
+        while not job_queue.empty() or any(t.is_alive() for t in worker_threads):
+            if shutdown_event.is_set():
+                logger.warning("[INTERRUPT] Shutdown event active — waiting for in-flight requests to finish...")
+                # Give workers up to 30s to finish their current HTTP call
+                deadline = time.time() + 30.0
+                while any(t.is_alive() for t in worker_threads) and time.time() < deadline:
+                    time.sleep(0.2)
+                logger.warning("[INTERRUPT] All workers stopped. Curation run aborted gracefully.")
+                break
+            time.sleep(0.1)
+    finally:
+        # Restore the original SIGINT handler so the rest of the pipeline
+        # (e.g., heuristic sweep below) responds normally to Ctrl+C.
+        signal.signal(signal.SIGINT, original_sigint)
 
     # Perform offline heuristic fallbacks for specific album directories that could not be resolved by the LLM
     generic_mixed_dirs = {"old", "music", "home videos", "downloads", "itunes", "dvd", "video_ts"}
