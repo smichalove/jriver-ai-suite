@@ -1,4 +1,4 @@
-# 🎵 JRiver AI Suite
+# 🎵 JRiver AI Suite Addon (addon for Jriver)
 
 A high-performance, private, local AI companion suite for [JRiver Media Center](https://www.jriver.com/) (available for purchase [here](https://www.jriver.com/purchase.shtml)). It enables lightning-fast audio/video metadata indexing, natural-language database querying (translating English to SQL), automatic spelling corrections, and real-time playback control (playing, queuing, and adding tracks to your active zone).
 
