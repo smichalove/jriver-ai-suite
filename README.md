@@ -1,8 +1,12 @@
-# 🎵 JRiver AI Suite Addon (addon for Jriver)
+# 🎵 AI Companion for Music Files (JRiver AI Suite)
 
 A high-performance, private, local AI companion suite for [JRiver Media Center](https://www.jriver.com/) (available for purchase [here](https://www.jriver.com/purchase.shtml)). It enables lightning-fast audio/video metadata indexing, natural-language database querying (translating English to SQL), automatic spelling corrections, and real-time playback control (playing, queuing, and adding tracks to your active zone).
 
 > **Developer Note:** JRiver Media Center is a best-in-class, highly performant media management platform for music and images, and I have been using it since 2005. This suite was built to bridge the gap between JRiver's robust media engine and modern local Generative AI.
+
+> [!NOTE]
+> **Compatibility & Customization:** While this suite is designed to be fully compatible with JRiver Media Center out-of-the-box (leveraging JRiver's exceptional software engine), the only strict integration dependency is for routing playback commands like `/queue` or `/play` to the player. If you use a different media manager that reads audio file metadata or exposes a different localhost web service interface, you can easily customize the codebase to interface with its API. (Though JRiver is best-in-class and highly recommended!)
+
 
 > [!IMPORTANT]
 > **AI Coding Assistants & Developers:** Before writing code, refactoring, or executing commands in this repository, please review the strict style guidelines, type annotations, and performance rules in [agents.md](agents.md).
@@ -63,8 +67,8 @@ You do **not** need a high-end AI workstation or data center to run this suite. 
 Clone the repository and install the dependencies in a virtual environment:
 ```bash
 # Clone this repository and navigate into it
-git clone <your-repository-url>
-cd jriver-AI-suite
+git clone https://github.com/smichalove/ai-companion-for-music-files.git
+cd ai-companion-for-music-files
 
 # Create and activate a virtual environment
 python -m venv venv
